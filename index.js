@@ -1,37 +1,31 @@
-import packageJson from "./package.json" with { type: "json" };
-import { setupTypeAcquisition } from "@typescript/ata";
-import ts from "typescript";
+import pkg from "./package.json" with { type: "json" };
+import { setupTypeAcquisition as ata } from "@typescript/ata";
+import typescript from "typescript";
 
-export const generateNpmDependenciesDeclarationFiles = async (dependenciesMap) => {
-  const deps = Object.entries(dependenciesMap);
-  const code = deps
-    .map(([name, version]) => {
-      version = version.replace("^", "");
-      return `import "${name}"; // types: ${version}`;
-    })
-    .join('\n');
-  console.log(code);
-  return new Promise((resolve) => {
-    const files = [];
-    const ata = setupTypeAcquisition({
-      projectName: "monaco-ts",
-      typescript: ts,
-      delegate: {
-        receivedFile: (code, path) => {
-          files.push({ path: "file://" + path, content: code });
-        },
-        finished: () => resolve(files),
-      },
-    });
-    ata(code);
+function getTypes(dependencies) {
+  const { promise, resolve } = Promise.withResolvers();
+  const code = Object.entries(dependencies).map(([name, version]) => {
+    return `import "${name}"; // types: ${version.replace("^", "")}`;
   });
-};
-
-function format(number) {
-  return new Intl.NumberFormat('en-US', { notation: "compact" }).format(number);
+  console.log(["", ...code, ""].join("\n"));
+  ata({ typescript, delegate: { finished: resolve } })(code.join("\n"));
+  return promise;
 }
 
-console.time("download time");
-const result = await generateNpmDependenciesDeclarationFiles(packageJson.dependencies);
-console.timeLog("download time");
-console.log("files:", format(result.length), ", size:", format(result.reduce((acc, file) => acc + file.content.length, 0)));
+async function getDependencies() {
+  const entries = Object.keys(pkg.dependencies).map((name) => {
+    const json = import(`${name}/package.json`, { with: { type: "json" } });
+    return json.then(({ default: { version } }) => [name, version]);
+  });
+  return Object.fromEntries(await Promise.all(entries));
+}
+
+function format(number) {
+  return new Intl.NumberFormat("en-US", { notation: "compact" }).format(number);
+}
+
+console.time("time");
+const fs = await getTypes(await getDependencies());
+console.log("files:", format([...fs.keys()].length));
+console.log("size:", format(fs.values().reduce((sum, s) => sum + s.length, 0)));
+console.timeEnd("time");
