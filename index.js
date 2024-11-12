@@ -27,7 +27,11 @@ export const generateNpmDependenciesDeclarationFiles = async (dependenciesMap) =
   });
 };
 
+function format(number) {
+  return new Intl.NumberFormat('en-US', { notation: "compact" }).format(number);
+}
+
 console.time("download time");
 const result = await generateNpmDependenciesDeclarationFiles(packageJson.dependencies);
 console.timeLog("download time");
-console.log("files:", result.length, ", size:", result.reduce((acc, file) => acc + file.content.length, 0));
+console.log("files:", format(result.length), ", size:", format(result.reduce((acc, file) => acc + file.content.length, 0)));
