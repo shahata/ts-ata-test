@@ -1,0 +1,23 @@
+{
+  "name": "npm-test",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@typescript/ata": "^0.9.7",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "@wix/ecom": "^1.0.811",
+    "@wix/essentials": "^0.1.9",
+    "@wix/events": "^1.0.334",
+    "@wix/stores": "^1.0.282",
+    "lodash": "^4.17.21"
+  }
+}
